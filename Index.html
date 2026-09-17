@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>我的博客</title>
+<style>
+  :root { --bg:#faf9f7; --card:#fff; --line:#e8e5e0; --text:#2c2c2c; --dim:#8a8580; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text);
+         font:16px/1.7 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+         -webkit-text-size-adjust:100%; }
+  .wrap { max-width:680px; margin:0 auto; padding:40px 20px 80px; }
+  .head { display:flex; align-items:flex-start; justify-content:space-between;
+          margin-bottom:32px; gap:12px; flex-wrap:wrap; }
+  h1 { font-size:22px; font-weight:600; margin:0; letter-spacing:.5px; }
+  .usage { font-size:12px; color:var(--dim); margin-top:4px; }
+  .topbar { display:flex; gap:8px; flex-shrink:0; flex-wrap:wrap; }
+  .topbar button { padding:8px 14px; font-size:13px; border-radius:8px;
+                   border:1px solid var(--line); background:var(--card);
+                   color:var(--text); cursor:pointer; font-family:inherit; }
+  .topbar button:hover { border-color:#bbb; }
+  .topbar button.primary { background:var(--text); color:#fff; border-color:var(--text); }
+
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px;
+          padding:20px; margin-bottom:24px; }
+  .date { font-size:13px; color:var(--dim); margin-bottom:10px; }
+  .text { white-space:pre-wrap; word-break:break-word; }
+  .imgs { display:grid; gap:8px; margin-top:14px; }
+  .imgs.n1 { grid-template-columns:1fr; }
+  .imgs.n2 { grid-template-columns:1fr 1fr; }
+  .imgs.n3 { grid-template-columns:repeat(3,1fr); }
+  .imgs img { width:100%; aspect-ratio:1; object-fit:cover;
+              border-radius:8px; display:block; }
+  .img-wrap { position:relative; }
+  .img-del { position:absolute; top:6px; right:6px; width:26px; height:26px;
+             border-radius:50%; border:0; background:rgba(0,0,0,.55); color:#fff;
+             font-size:15px; line-height:1; cursor:pointer; display:none; padding:0; }
+  .img-wrap:hover .img-del, .img-wrap:active .img-del { display:block; }
+  .add-img { display:inline-flex; align-items:center; gap:6px; margin-top:12px;
+             padding:8px 14px; font-size:13px; color:var(--dim);
+             border:1px dashed var(--line); border-radius:8px; cursor:pointer;
+             background:transparent; font-family:inherit; }
+  .add-img:hover { border-color:#bbb; color:var(--text); }
+
+  .links { margin-top:14px; display:flex; flex-direction:column; gap:8px; }
+  .links a { display:flex; align-items:center; gap:8px; padding:10px 12px;
+             background:#f4f2ef; border-radius:8px; color:var(--text);
+             text-decoration:none; font-size:14px; transition:.15s; }
+  .links a:hover { background:#eceae6; }
+  .links a::before { content:""; font-size:13px; flex-shrink:0; }
+  .links a .t { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .links a span { color:var(--dim); font-size:12px; margin-left:auto;
+                  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+                  max-width:180px; flex-shrink:0; }
+
+  .cmts { margin-top:18px; border-top:1px solid var(--line); padding-top:14px; }
+  .cmt { font-size:14px; padding:6px 0; display:flex; gap:8px; align-items:flex-start; }
+  .cmt b { color:var(--dim); font-weight:500; flex-shrink:0; }
+  .cmt span { flex:1; word-break:break-word; }
+  .cmt-del { border:0; background:transparent; color:var(--dim); cursor:pointer;
+             font-size:15px; line-height:1; padding:0 4px; opacity:0;
+             flex-shrink:0; transition:.15s; }
+  .cmt:hover .cmt-del, .cmt:active .cmt-del { opacity:1; }
+  .cmt-del:hover { color:#c0392b; }
+  .cmt-form { display:flex; gap:8px; margin-top:10px; }
+  .cmt-form input { flex:1; min-width:0; padding:8px 12px; border:1px solid var(--line);
+                    border-radius:8px; font-size:14px; outline:none; background:#faf9f7; }
+  .cmt-form input:focus { border-color:#bbb; }
+  .cmt-form button { padding:8px 16px; border:0; border-radius:8px;
+                     background:var(--text); color:#fff; font-size:14px; cursor:pointer;
+                     flex-shrink:0; font-family:inherit; }
+
+  /* ===== 编辑态 ===== */
+  .edit-date { width:100%; padding:8px 10px; font-size:13px; border:1px solid var(--line);
+               border-radius:6px; background:#faf9f7; margin-bottom:10px;
+               font-family:inherit; color:var(--dim); outline:none; }
+  textarea.edit-text { width:100%; min-height:120px; padding:12px; font-size:16px;
+                       line-height:1.7; border:1px solid var(--line); border-radius:8px;
+                       background:#faf9f7; resize:vertical; font-family:inherit;
+                       outline:none; color:var(--text); }
+  textarea.edit-text:focus, .edit-date:focus { border-color:#bbb; background:#fff; }
+
+  .edit-links { margin-top:14px; display:flex; flex-direction:column; gap:8px; }
+  .edit-link { display:flex; gap:6px; align-items:center; }
+  .edit-link input { padding:8px 10px; font-size:13px; border:1px solid var(--line);
+                     border-radius:6px; background:#faf9f7; font-family:inherit;
+                     outline:none; min-width:0; }
+  .edit-link input:focus { border-color:#bbb; background:#fff; }
+  .edit-link .t { flex:1; }
+  .edit-link .u { flex:1.6; }
+  .edit-link .x { width:34px; height:34px; flex-shrink:0; border:0; background:transparent;
+                  color:var(--dim); cursor:pointer; font-size:17px; padding:0; border-radius:6px; }
+  .edit-link .x:hover { color:#c0392b; background:#f4f2ef; }
+
+  .card-tools { display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
+  .card-tools button { padding:7px 12px; font-size:13px; border-radius:7px;
+                       border:1px solid var(--line); background:transparent;
+                       color:var(--dim); cursor:pointer; font-family:inherit; }
+  .card-tools button:hover { border-color:#bbb; color:var(--text); }
+  .card-tools button.danger:hover { color:#c0392b; border-color:#e0b4ac; }
+
+  .toast { position:fixed; left:50%; bottom:32px; transform:translateX(-50%);
+           background:var(--text); color:#fff; padding:10px 20px; border-radius:8px;
+           font-size:14px; opacity:0; transition:.25s; pointer-events:none; z-index:99; }
+  .toast.show { opacity:1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div>
+      <h1>我的记录</h1>
+      <div class="usage" id="usage"></div>
+    </div>
+    <div class="topbar">
+      <button id="toggleEdit">编辑</button>
+      <button id="addPost" class="primary" style="display:none">＋ 新文章</button>
+      <button id="exportBtn" title="备份到本地">导出</button>
+    </div>
+  </div>
+  <div id="feed"></div>
+</div>
+
+<input type="file" id="picker" accept="image/*" multiple hidden>
+<div class="toast" id="toast"></div>
+
+<script>
+// ==================== 默认数据（只首次灌一次） ====================
+const DEFAULT_POSTS = [
+  {
+    id: "p1",
+    date: new Date().toISOString().slice(0, 10),
+    text: "这是我的第一篇。\n点右上角「编辑」就能改。",
+    images: [],
+    links: []
+  }
+];
+
+// ==================== 环境自检 ====================
+if (location.protocol === "file:") {
+  console.warn("[提示] 你是用 file:// 打开的，存储会不稳定。请用 GitHub Pages 的 https 网址。");
+}
+const HAS_IDB = (() => { try { return !!window.indexedDB; } catch { return false; } })();
+
+// ==================== 文章：localStorage ====================
+const PK = "blog_posts";
+function loadPosts() {
+  const raw = localStorage.getItem(PK);
+  if (raw) { try { return JSON.parse(raw); } catch {} }
+  localStorage.setItem(PK, JSON.stringify(DEFAULT_POSTS));
+  return JSON.parse(JSON.stringify(DEFAULT_POSTS));
+}
+function savePosts(arr) {
+  try { localStorage.setItem(PK, JSON.stringify(arr)); return true; }
+  catch (e) { alert("文章存储满了，删几篇旧的。"); return false; }
+}
+let posts = loadPosts();
+
+// ==================== 评论 ====================
+const CK = "blog_comments";
+const loadCmts = () => JSON.parse(localStorage.getItem(CK) || "{}");
+const saveCmts = d => {
+  try { localStorage.setItem(CK, JSON.stringify(d)); }
+  catch (e) { alert("评论存储满了。"); }
+};
+
+// ==================== 图片：IndexedDB ====================
+let _db = null;
+function openDB() {
+  if (_db) return _db;
+  _db = new Promise((res, rej) => {
+    const r = indexedDB.open("blog_db", 1);
+    r.onupgradeneeded = () => r.result.createObjectStore("imgs");
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+  return _db;
+}
+async function imgGet(id) {
+  const db = await openDB();
+  return new Promise((res, rej) => {
+    const req = db.transaction("imgs", "readonly").objectStore("imgs").get(id);
+    req.onsuccess = () => res(req.result || []);
+    req.onerror = () => rej(req.error);
+  });
+}
+async function imgSet(id, arr) {
+  const db = await openDB();
+  return new Promise((res, rej) => {
+    const t = db.transaction("imgs", "readwrite");
+    t.objectStore("imgs").put(arr, id);
+    t.oncomplete = res;
+    t.onerror = () => rej(t.error);
+  });
+}
+async function imgDel(id) {
+  const db = await openDB();
+  return new Promise((res, rej) => {
+    const t = db.transaction("imgs", "readwrite");
+    t.objectStore("imgs").delete(id);
+    t.oncomplete = res;
+    t.onerror = () => rej(t.error);
+  });
+}
+async function imgGetAll() {
+  const db = await openDB();
+  return new Promise((res, rej) => {
+    const t = db.transaction("imgs", "readonly");
+    const out = {};
+    t.objectStore("imgs").openCursor().onsuccess = e => {
+      const c = e.target.result;
+      if (c) { out[c.key] = c.value; c.continue(); } else res(out);
+    };
+    t.onerror = () => rej(t.error);
+  });
+}
+
+function compress(file, maxSide = 2000, quality = 0.85) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let w = img.naturalWidth, h = img.naturalHeight;
+      const r = Math.min(1, maxSide / Math.max(w, h));
+      w = Math.round(w * r); h = Math.round(h * r);
+      const c = document.createElement("canvas");
+      c.width = w; c.height = h;
+      const ctx = c.getContext("2d");
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, w, h);
+      ctx.drawImage(img, 0, 0, w, h);
+      c.toBlob(b => b ? resolve(b) : reject(new Error("toBlob 失败")),
+               "image/jpeg", quality);
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const uid = () => "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+let objUrls = [];
+const blobUrl = b => { const u = URL.createObjectURL(b); objUrls.push(u); return u; };
+const revokeAll = () => { objUrls.forEach(URL.revokeObjectURL); objUrls = []; };
+
+function toast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove("show"), 1800);
+}
+
+// ==================== 状态 ====================
+let editing = false;
+let uploadTarget = null;
+
+// ==================== 渲染 ====================
+async function render() {
+  revokeAll();
+  const cmts = loadCmts();
+  const imgStore = await imgGetAll();
+
+  document.getElementById("toggleEdit").textContent = editing ? "完成" : "编辑";
+  document.getElementById("addPost").style.display = editing ? "" : "none";
+
+  document.getElementById("feed").innerHTML = posts.map((p, pi) => {
+    const base = p.images || [];
+    const extra = imgStore[p.id] || [];
+    const total = base.length + extra.length;
+
+    const imgs = total
+      ? `<div class="imgs n${Math.min(total, 3)}">` +
+        base.map(src =>
+          `<div class="img-wrap"><img src="${esc(src)}" loading="lazy" alt=""></div>`
+        ).join("") +
+        extra.map((b, i) =>
+          `<div class="img-wrap">
+             <img src="${blobUrl(b)}" loading="lazy" alt="">
+             ${editing
+               ? `<button class="img-del" data-id="${p.id}" data-i="${i}" title="删除">×</button>`
+               : ""}
+           </div>`
+        ).join("") + `</div>`
+      : "";
+
+    if (editing) {
+      const editLinks = (p.links || []).map((l, li) =>
+        `<div class="edit-link">
+           <input class="t" data-pi="${pi}" data-li="${li}" data-k="title"
+                  value="${esc(l.title)}" placeholder="链接名称">
+           <input class="u" data-pi="${pi}" data-li="${li}" data-k="url"
+                  value="${esc(l.url)}" placeholder="https://...">
+           <button class="x" data-pi="${pi}" data-li="${li}"
+                   data-act="dellink" title="删除">×</button>
+         </div>`).join("");
+
+      return `<div class="card">
+        <input class="edit-date" data-pi="${pi}" data-k="date"
+               value="${esc(p.date)}" placeholder="日期">
+        <textarea class="edit-text" data-pi="${pi}" data-k="text"
+                  placeholder="写点什么…">${esc(p.text)}</textarea>
+        ${imgs}
+        <button class="add-img" data-id="${p.id}">＋ 添加图片</button>
+        <div class="edit-links">${editLinks}</div>
+        <div class="card-tools">
+          <button data-pi="${pi}" data-act="addlink">＋ 链接</button>
+          <button data-pi="${pi}" data-act="up">↑ 上移</button>
+          <button data-pi="${pi}" data-act="down">↓ 下移</button>
+          <button class="danger" data-pi="${pi}" data-act="delpost">删除文章</button>
+        </div>
+      </div>`;
+    }
+
+    const links = p.links && p.links.length
+      ? `<div class="links">` +
+        p.links.filter(l => l.url).map(l => {
+          let host = "";
+          try { host = new URL(l.url).hostname; } catch { host = l.url; }
+          return `<a href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">
+                    <span class="t">${esc(l.title || l.url)}</span><span>${esc(host)}</span>
+                  </a>`;
+        }).join("") + `</div>`
+      : "";
+
+    const list = (cmts[p.id] || []).map((c, i) =>
+      `<div class="cmt">
+         <b>${esc(c.author)}</b><span>${esc(c.content)}</span>
+         <button class="cmt-del" data-id="${p.id}" data-i="${i}" title="删除">×</button>
+       </div>`).join("");
+
+    return `<div class="card">
+      <div class="date">${esc(p.date)}</div>
+      <div class="text">${esc(p.text)}</div>
+      ${imgs}
+      ${links}
+      <div class="cmts">
+        ${list}
+        <div class="cmt-form">
+          <input placeholder="说点什么…" data-id="${p.id}" maxlength="200">
+          <button data-id="${p.id}">发送</button>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+
+  updateUsage();
+}
+
+async function updateUsage() {
+  try {
+    const { usage, quota } = await navigator.storage.estimate();
+    const u = (usage / 1024 / 1024).toFixed(1);
+    const q = (quota / 1024 / 1024 / 1024).toFixed(1);
+    document.getElementById("usage").textContent = `图片已用 ${u} MB / ${q} GB`;
+  } catch {
+    document.getElementById("usage").textContent = "";
+  }
+}
+
+// ==================== 编辑输入：只写内存 ====================
+document.addEventListener("input", e => {
+  const t = e.target;
+  const pi = t.dataset.pi;
+  if (pi === undefined || !t.dataset.k) return;
+  const p = posts[+pi];
+  if (!p) return;
+  if (t.dataset.k === "text") p.text = t.value;
+  else if (t.dataset.k === "date") p.date = t.value;
+  else if (t.dataset.k === "title" || t.dataset.k === "url") {
+    const li = +t.dataset.li;
+    if (p.links && p.links[li]) p.links[li][t.dataset.k] = t.value;
+  }
+});
+
+// ==================== 上传（GIF 原样保留） ====================
+const picker = document.getElementById("picker");
+
+picker.addEventListener("change", async e => {
+  const files = [...e.target.files];
+  e.target.value = "";
+  if (!files.length) return;
+
+  if (!uploadTarget) { alert("请重新点「＋ 添加图片」"); return; }
+  if (!HAS_IDB) {
+    alert("当前环境不支持 IndexedDB，图片无法保存。\n请用 GitHub Pages 的 https 网址打开，别用 file:// 或无痕模式。");
+    return;
+  }
+
+  const id = uploadTarget;
+  let existing = [];
+  try { existing = await imgGet(id); }
+  catch (err) { alert("读取本地数据库失败：" + err.message); return; }
+
+  const added = [];
+  for (const f of files) {
+    if (!f.type.startsWith("image/")) continue;
+
+    try {
+      // GIF 不压缩，原文件直接存，保留动画
+      if (f.type === "image/gif") {
+        added.push(f);
+      } else {
+        added.push(await compress(f));
+      }
+    } catch (err) {
+      console.warn("处理失败：", f.name, err);
+    }
+  }
+
+  if (!added.length) { alert("没有成功处理任何图片"); return; }
+
+  try {
+    await imgSet(id, [...existing, ...added]);
+    toast(`已添加 ${added.length} 张图片`);
+  } catch (err) {
+    alert("保存失败：" + err.message);
+    return;
+  }
+  render();
+});
+
+// ==================== 导出 ====================
+document.getElementById("exportBtn").addEventListener("click", async () => {
+  const withImgs = confirm(
+    "导出备份\n\n" +
+    "点「确定」：包含图片（文件大，几十 MB）\n" +
+    "点「取消」：仅文字和链接（文件小）"
+  );
+
+  const cmts = loadCmts();
+  const data = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    posts,
+    comments: cmts,
+    images: {}
+  };
+
+  if (withImgs) {
+    const all = await imgGetAll();
+    for (const [id, blobs] of Object.entries(all)) {
+      data.images[id] = [];
+      for (const b of blobs) {
+        data.images[id].push(await new Promise(res => {
+          const r = new FileReader();
+          r.onload = () => res(r.result);
+          r.readAsDataURL(b);
+        }));
+      }
+    }
+  }
+
+  const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `blog-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast("已导出备份");
+});
+
+// ==================== 点击：顺序严格 ====================
+document.addEventListener("click", async e => {
+  const t = e.target;
+
+  if (t.id === "toggleEdit") {
+    if (editing) { savePosts(posts); toast("已保存"); }
+    editing = !editing;
+    render();
+    return;
+  }
+
+  if (t.id === "addPost") {
+    posts.unshift({
+      id: uid(),
+      date: new Date().toISOString().slice(0, 10),
+      text: "",
+      images: [],
+      links: []
+    });
+    savePosts(posts);
+    render();
+    return;
+  }
+
+  if (t.dataset.act) {
+    const pi = +t.dataset.pi;
+    const act = t.dataset.act;
+    const p = posts[pi];
+    if (!p) return;
+
+    if (act === "addlink") {
+      p.links = p.links || [];
+      p.links.push({ title: "", url: "" });
+    } else if (act === "dellink") {
+      p.links.splice(+t.dataset.li, 1);
+    } else if (act === "up" && pi > 0) {
+      [posts[pi - 1], posts[pi]] = [posts[pi], posts[pi - 1]];
+    } else if (act === "down" && pi < posts.length - 1) {
+      [posts[pi + 1], posts[pi]] = [posts[pi], posts[pi + 1]];
+    } else if (act === "delpost") {
+      if (!confirm("删除这篇文章？")) return;
+      const id = p.id;
+      posts.splice(pi, 1);
+      await imgDel(id);
+    }
+    savePosts(posts);
+    render();
+    return;
+  }
+
+  if (t.classList.contains("cmt-del")) {
+    if (!confirm("删除这条评论？")) return;
+    const id = t.dataset.id, i = +t.dataset.i;
+    const all = loadCmts();
+    if (all[id]) {
+      all[id].splice(i, 1);
+      if (!all[id].length) delete all[id];
+      saveCmts(all);
+      render();
+    }
+    return;
+  }
+
+  if (t.classList.contains("add-img")) {
+    uploadTarget = t.dataset.id;
+    picker.click();
+    return;
+  }
+
+  if (t.classList.contains("img-del")) {
+    const id = t.dataset.id, i = +t.dataset.i;
+    const arr = await imgGet(id);
+    arr.splice(i, 1);
+    await imgSet(id, arr);
+    render();
+    return;
+  }
+
+  if (t.tagName === "BUTTON" && t.dataset.id) {
+    const id = t.dataset.id;
+    const input = document.querySelector(`input[data-id="${id}"]`);
+    if (!input) return;
+    const content = input.value.trim();
+    if (!content) return;
+    const all = loadCmts();
+    if (!all[id]) all[id] = [];
+    all[id].push({ author: "我", content, time: Date.now() });
+    saveCmts(all);
+    render();
+  }
+});
+
+render();
+</script>
+</body>
+</html>
